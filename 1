@@ -43,7 +43,6 @@ def create_r(n, p, num, c):
 def read_t():
     res = select(Products)
     result = session.execute(res)
-    print("id | name | price | number | comment")
     for x in result.scalars():
         print(f"{x.id}   {x.name}    {x.price}      {x.number}      {x.comment}")
 
