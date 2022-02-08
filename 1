@@ -1,0 +1,89 @@
+'''Создать таблицу продуктов.
+ Атрибуты продукта: id, название, цена, количество, комментарий.
+Реализовать CRUD(создание, чтение, обновление по id, удаление по id) для продуктов. Создать пользовательский интерфейс. 
+'''
+
+from sqlalchemy import create_engine, select
+from sqlalchemy import  Column, Integer, String, MetaData
+from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import sessionmaker
+
+engine = create_engine("sqlite:///test1.db", echo=False)
+Base = declarative_base()
+
+class Products(Base):
+    __tablename__ = 'products'
+    id = Column(Integer, primary_key=True)
+    name = Column(String)
+    price = Column(Integer)
+    number = Column(Integer)
+    comment = Column(String)
+
+    def __init__(self, name, price, number, comment=''):
+        self.name = name
+        self.price = price
+        self.number = number
+        self.comment = comment
+
+
+Base.metadata.create_all(engine)
+Session = sessionmaker(bind=engine)
+session = Session()
+
+def create_r(n, p, num, c):
+    print(f"В таблицу будет добавлена следующая запись: \n{n} {p} {num} {c} \nПродолжить (1/0)?")
+    f = int(input())
+    if f == 0:
+        print("Отмена добавления записи.")
+        return 0
+    session.add(Products(n, p, num, c))
+    session.commit()
+    print("Запись успешно добавлена.")
+
+def read_t():
+    res = select(Products)
+    result = session.execute(res)
+    print("id | name | price | number | comment")
+    for x in result.scalars():
+        print(f"{x.id}   {x.name}    {x.price}      {x.number}      {x.comment}")
+
+def update_r(r_id):
+    to_change = session.execute(select(Products).filter_by(id=r_id)).scalar_one()
+    print(f"Выбрана запись:\n{to_change.id} {to_change.name} {to_change.price} {to_change.number} {to_change.comment}")
+    to_change.name = str(input("input name: "))
+    to_change.price = int(input("input price: "))
+    to_change.number = int(input("input number: "))
+    to_change.comment = str(input("input comment: "))
+    session.commit()
+    print("Записьобновлена")
+
+def delete_r(r_id):
+    to_delete = session.execute(select(Products).filter_by(id=r_id)).scalar_one()
+    print(f"Выбрана запись:\n{to_delete.id} {to_delete.name} {to_delete.price} {to_delete.number} {to_delete.comment}")
+    f = int(input("Удалить запись? (1/0)"))
+    if f == 0:
+        return 0
+    x = session.get(Products, r_id)
+    session.delete(x)
+    session.commit()
+    print("Удаление ряда выполнено успешно")
+
+while True:
+    print("Введите действие: \n 1 - create record \n 2 - read table \n 3 - update \n 4 - delete \n 0 - exit")
+    com = int(input())
+    if com == 0:
+        break
+    elif com == 1:
+        name = str(input("input name: "))
+        price = int(input("input price: "))
+        number = int(input("input number: "))
+        comment = str(input("input comment: "))
+        create_r(name, price, number, comment)
+    elif com == 2:
+        read_t()
+    elif com == 3:
+        id = int(input("input id"))
+        update_r(id)
+    elif com == 4:
+        id = int(input("input id"))
+        delete_r(id)
